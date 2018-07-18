@@ -22,6 +22,12 @@
 						{{else if and $.IsRepositoryWriter $.AllowPullRequest}}
 							<a class="ui basic button" href="{{$.RepoLink}}/compare/{{EscapePound $.BranchName}}...{{EscapePound .Name}}"><i class="octicon octicon-git-pull-request"></i> {{$.i18n.Tr "repo.pulls.new"}}</a>
 						{{end}}
+						{{if .IsBranchDeletable}}
+							<form class="ui form" action="{{$.RepoLink}}/branches/delete/{{.Name}}?redirect_to={{$.RepoLink}}/branches/all" method="post" style="float: left;">
+								{{$.CSRFTokenHTML}}
+								<button class="ui red button">{{$.i18n.Tr "repo.pulls.delete_branch"}}</button>
+							</form>
+						{{end}}
 					</div>
 				</div>
 			{{end}}

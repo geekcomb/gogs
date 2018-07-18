@@ -24,6 +24,7 @@ type Branch struct {
 	Name        string
 	Commit      *git.Commit
 	IsProtected bool
+	IsBranchDeletable bool
 }
 
 func loadBranches(c *context.Context) []*Branch {
@@ -52,9 +53,18 @@ func loadBranches(c *context.Context) []*Branch {
 			Commit: commit,
 		}
 
+		branches[i].IsBranchDeletable=true
+
 		for j := range protectBranches {
 			if branches[i].Name == protectBranches[j].Name {
 				branches[i].IsProtected = true
+
+				branchDeletable:= c.Repo.IsWriter() && c.Repo.GitRepo.IsBranchExist(protectBranches[j].Name)
+				if branchDeletable && protectBranches[j].EnableWhitelist {
+					if !models.IsUserInProtectBranchWhitelist(c.Repo.Repository.ID, c.User.ID,protectBranches[j].Name) {
+						branches[i].IsBranchDeletable=false
+					}
+				}
 				break
 			}
 		}
