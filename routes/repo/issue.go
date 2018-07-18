@@ -654,12 +654,44 @@ func viewIssue(c *context.Context, isPullList bool) {
 			branchProtected = protectBranch.Protected
 		}
 
-		c.Data["IsPullBranchDeletable"] = pull.BaseRepoID == pull.HeadRepoID &&
-			c.Repo.IsWriter() && c.Repo.GitRepo.IsBranchExist(pull.HeadBranch) &&
-			!branchProtected
+		//c.Data["IsPullBranchDeletable"] = pull.BaseRepoID == pull.HeadRepoID &&
+		//	c.Repo.IsWriter() && c.Repo.GitRepo.IsBranchExist(pull.HeadBranch) &&
+		//	!branchProtected
+
+		pullBranchDeletable:= pull.BaseRepoID == pull.HeadRepoID &&
+			c.Repo.IsWriter() && c.Repo.GitRepo.IsBranchExist(pull.HeadBranch)
+		if pullBranchDeletable && branchProtected && protectBranch.EnableWhitelist {
+			if !models.IsUserInProtectBranchWhitelist(repo.ID, c.User.ID,pull.HeadBranch) {
+				pullBranchDeletable = false
+			}
+		}
+		c.Data["IsPullBranchDeletable"] = pullBranchDeletable
 
 		deleteBranchUrl := template.EscapePound(c.Repo.RepoLink + "/branches/delete/" + pull.HeadBranch)
 		c.Data["DeleteBranchLink"] = fmt.Sprintf("%s?commit=%s&redirect_to=%s", deleteBranchUrl, pull.MergedCommitID, c.Data["Link"])
+	}
+
+	if issue.IsPull && issue.PullRequest.CanAutoMerge() {
+		pull := issue.PullRequest
+		branchProtected := false
+		protectBranch, err := models.GetProtectBranchOfRepoByName(pull.BaseRepoID, pull.BaseBranch)
+		if err != nil {
+			if !errors.IsErrBranchNotExist(err) {
+				c.ServerError("GetProtectBranchOfRepoByName", err)
+				return
+			}
+		} else {
+			branchProtected = protectBranch.Protected
+		}
+
+		pullBranchMergeAble:= pull.BaseRepoID == pull.HeadRepoID &&
+			c.Repo.IsWriter() && c.Repo.GitRepo.IsBranchExist(pull.BaseBranch)
+		if pullBranchMergeAble && branchProtected && protectBranch.EnableWhitelist {
+			if !models.IsUserInProtectBranchWhitelist(repo.ID, c.User.ID,pull.BaseBranch) {
+				pullBranchMergeAble = false
+			}
+		}
+		c.Data["IsPullBranchMerge"] = pullBranchMergeAble
 	}
 
 	c.Data["Participants"] = participants
