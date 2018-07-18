@@ -15,11 +15,17 @@
 					{{$timeSince := TimeSince .DefaultBranch.Commit.Committer.When $.Lang}}
 					<span class="ui text light grey">{{$.i18n.Tr "repo.branches.updated_by" $timeSince .DefaultBranch.Commit.Committer.Name | Safe}}</span>
 				</div>
-				{{if and $.IsRepositoryAdmin (not $.Repository.IsMirror)}}
-					<div class="ui four wide column">
-						<a class="ui basic blue button" href="{{$.RepoLink}}/settings/branches">{{.i18n.Tr "repo.branches.change_default_branch"}}</a>
-					</div>
-				{{end}}
+				<div class="ui four wide column">
+					{{if and $.IsRepositoryAdmin (not $.Repository.IsMirror)}}
+							<a class="ui basic blue button" href="{{$.RepoLink}}/settings/branches">{{.i18n.Tr "repo.branches.change_default_branch"}}</a>
+					{{end}}
+					{{if .DefaultBranch.IsBranchDeletable}}
+						<form class="ui form" action="{{$.RepoLink}}/branches/delete/{{.DefaultBranch.Name}}?redirect_to={{$.RepoLink}}/branches" method="post" style="float: left;">
+							{{$.CSRFTokenHTML}}
+							<button class="ui red button">{{$.i18n.Tr "repo.pulls.delete_branch"}}</button>
+						</form>
+					{{end}}
+				</div>
 			</div>
 		</div>
 
@@ -35,11 +41,17 @@
 							{{$timeSince := TimeSince .Commit.Committer.When $.Lang}}
 							<span class="ui text light grey">{{$.i18n.Tr "repo.branches.updated_by" $timeSince .Commit.Committer.Name | Safe}}</span>
 						</div>
-						{{if and $.IsRepositoryWriter $.AllowPullRequest}}
-							<div class="ui four wide column">
+						<div class="ui four wide column">
+							{{if and $.IsRepositoryWriter $.AllowPullRequest}}
 								<a class="ui basic button" href="{{$.RepoLink}}/compare/{{EscapePound $.BranchName}}...{{EscapePound .Name}}"><i class="octicon octicon-git-pull-request"></i> {{$.i18n.Tr "repo.pulls.new"}}</a>
-							</div>
-						{{end}}
+							{{end}}
+							{{if .IsBranchDeletable}}
+								<form class="ui form" action="{{$.RepoLink}}/branches/delete/{{.Name}}?redirect_to={{$.RepoLink}}/branches" method="post" style="float: left;">
+									{{$.CSRFTokenHTML}}
+									<button class="ui red button">{{$.i18n.Tr "repo.pulls.delete_branch"}}</button>
+								</form>
+							{{end}}
+						</div>
 					</div>
 				{{end}}
 			</div>
@@ -57,11 +69,17 @@
 							{{$timeSince := TimeSince .Commit.Committer.When $.Lang}}
 							<span class="ui text light grey">{{$.i18n.Tr "repo.branches.updated_by" $timeSince .Commit.Committer.Name | Safe}}</span>
 						</div>
-						{{if and $.IsRepositoryWriter $.AllowPullRequest}}
-							<div class="ui four wide column">
+						<div class="ui four wide column">
+							{{if and $.IsRepositoryWriter $.AllowPullRequest}}
 								<a class="ui basic button" href="{{$.RepoLink}}/compare/{{EscapePound $.BranchName}}...{{EscapePound .Name}}"><i class="octicon octicon-git-pull-request"></i> {{$.i18n.Tr "repo.pulls.new"}}</a>
-							</div>
-						{{end}}
+							{{end}}
+							{{if .IsBranchDeletable}}
+								<form class="ui form" action="{{$.RepoLink}}/branches/delete/{{.Name}}?redirect_to={{$.RepoLink}}/branches" method="post" style="float: left;">
+									{{$.CSRFTokenHTML}}
+									<button class="ui red button">{{$.i18n.Tr "repo.pulls.delete_branch"}}</button>
+								</form>
+							{{end}}
+						</div>
 					</div>
 				{{end}}
 			</div>
