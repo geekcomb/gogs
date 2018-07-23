@@ -404,6 +404,30 @@ func MergePullRequest(c *context.Context) {
 		return
 	}
 
+	branchProtected := false
+	protectBranch, err := models.GetProtectBranchOfRepoByName(pr.BaseRepoID, pr.BaseBranch)
+	if err != nil {
+		if !errors.IsErrBranchNotExist(err) {
+			c.NotFound()
+			return
+		}
+	} else {
+		branchProtected = protectBranch.Protected
+	}
+
+	pullBranchMergeAble:= pr.BaseRepoID == pr.HeadRepoID &&
+		c.Repo.IsWriter() && c.Repo.GitRepo.IsBranchExist(pr.BaseBranch)
+	if pullBranchMergeAble && branchProtected && protectBranch.EnableWhitelist {
+		if !models.IsUserInProtectBranchWhitelist(c.Repo.Repository.ID, c.User.ID,pr.BaseBranch) {
+			pullBranchMergeAble = false
+		}
+	}
+
+	if !pullBranchMergeAble {
+		c.NotFound()
+		return
+	}
+
 	pr.Issue = issue
 	pr.Issue.Repo = c.Repo.Repository
 	if err = pr.Merge(c.User, c.Repo.GitRepo, models.MergeStyle(c.Query("merge_style")), c.Query("commit_description")); err != nil {
